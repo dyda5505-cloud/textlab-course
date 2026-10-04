@@ -31,3 +31,17 @@ jobs:
       - name: Stop containers
         if: always()
         run: docker compose down
+  monitoring:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start monitoring stack
+        run: docker compose -f compose.yaml -f compose.monitoring.yaml up --build -d --wait
+      - name: Verify metrics, logs and provisioned dashboard
+        run: docker compose -f compose.yaml -f compose.monitoring.yaml exec -T backend python tools/monitoring_smoke.py
+      - name: Service logs
+        if: always()
+        run: docker compose -f compose.yaml -f compose.monitoring.yaml logs --no-color
+      - name: Stop monitoring stack
+        if: always()
+        run: docker compose -f compose.yaml -f compose.monitoring.yaml down
