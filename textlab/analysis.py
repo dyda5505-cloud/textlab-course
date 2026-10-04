@@ -1,17 +1,19 @@
+"""Deterministic Unicode text analysis, shared by the worker and tests."""
 import re
+from collections import Counter
+
+WORD_PATTERN = re.compile(r"[^\W_]+(?:['’][^\W_]+)*", re.UNICODE)
+
+def tokenize(text):
+    return WORD_PATTERN.findall(text.casefold())
 
 def analyze(text):
-    words = re.findall(r"[^\W_]+(?:['’][^\W_]+)*", text.casefold(), re.UNICODE)
-    counts = {}
-    for word in words:
-        if word in counts:
-            counts[word] += 1
-        else:
-            counts[word] = 1
-    items = list(counts.items())
-    items.sort(key=lambda item: (-item[1], item[0]))
-    result = []
-    for word, count in items[:10]:
-        result.append({'word': word, 'count': count})
-    return {'characters': len(text), 'words': len(words),
-            'unique_words': len(counts), 'top_words': result}
+    words = tokenize(text)
+    counts = Counter(words)
+    frequent = sorted(counts.items(), key=lambda item: (-item[1], item[0]))[:10]
+    return {
+        'characters': len(text),
+        'words': len(words),
+        'unique_words': len(counts),
+        'top_words': [{'word': word, 'count': count} for word, count in frequent],
+    }
