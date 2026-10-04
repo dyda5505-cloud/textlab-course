@@ -1,0 +1,33 @@
+name: CI
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+      - name: Build wheel and sdist
+        run: python -m build
+      - name: Run tests
+        run: pytest --cov=textlab --cov-report=term-missing --cov-fail-under=85
+      - name: Build containers and test async HTTP lifecycle
+        run: |
+          docker compose up --build -d --wait
+          python tools/smoke.py
+      - name: Save service logs
+        if: always()
+        run: docker compose logs --no-color
+      - name: Stop containers
+        if: always()
+        run: docker compose down

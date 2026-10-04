@@ -1,0 +1,24 @@
+name: Secure CI
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements-dev.txt
+      - name: Unit and integration tests
+        run: pytest
+      - name: Static analysis (Bandit)
+        run: bandit -r textlab -ll
+      - name: Dependency vulnerability audit
+        run: pip-audit -r requirements.txt
+      - name: Secret scan (Gitleaks)
+        run: |
+          docker run --rm -v "$PWD:/repo:ro" zricethezav/gitleaks:v8.24.3 detect --source=/repo --redact --no-banner

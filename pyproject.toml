@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "textlab-course"
+version = "0.1.0"
+description = "Queued Unicode text analysis for Software Engineering labs"
+requires-python = ">=3.12"
+dependencies = ["Flask==3.1.3", "gunicorn==26.2.0"]
+[tool.setuptools.packages.find]
+include = ["textlab*"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
